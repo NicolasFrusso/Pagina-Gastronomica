@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-body: 'Manrope', sans-serif;
+  --font-heading: 'Outfit', sans-serif;
+  --brand-primary: #d26743;
+  --brand-primary-strong: #b54e2d;
+  --brand-primary-soft: #f7ece5;
+  --brand-secondary: #17353d;
+  --brand-background: #f5f0ea;
+  --brand-surface: #fffdfb;
+  --brand-card: #faf6f2;
+  --brand-line: #e8ddd4;
+  --brand-text: #201914;
+  --brand-muted: #6d625b;
+  --brand-shadow: rgba(32, 25, 20, 0.12);
+  --brand-shadow-soft: rgba(32, 25, 20, 0.07);
+  font-family: var(--font-body);
+  color: var(--brand-text);
+  background-color: var(--brand-background);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--brand-background);
+}
+
+#root {
+  min-height: 100svh;
+}
+
+::selection {
+  background: var(--brand-primary-soft);
+  color: var(--brand-text);
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
