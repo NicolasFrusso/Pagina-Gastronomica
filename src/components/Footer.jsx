@@ -1,6 +1,9 @@
 import { Instagram, MapPin, MessageCircle } from 'lucide-react'
 
-export function Footer({ brand, whatsAppUrl }) {
+export function Footer({ brand, cartItemCount, onOpenCart }) {
+  const cartLabel =
+    cartItemCount > 0 ? `Ver pedido (${cartItemCount})` : 'Pedir por WhatsApp'
+
   return (
     <footer className="px-4 pb-8 pt-3 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl rounded-[28px] border border-[var(--brand-line)] bg-[var(--brand-surface)] px-5 py-6 shadow-card sm:px-6">
@@ -27,15 +30,14 @@ export function Footer({ brand, whatsAppUrl }) {
               <MapPin className="h-4 w-4" />
               {brand.contact.address}
             </a>
-            <a
+            <button
               className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--brand-line)] bg-[var(--brand-card)] px-4 py-3 text-sm font-semibold text-[var(--brand-text)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-primary)]"
-              href={whatsAppUrl}
-              rel="noreferrer"
-              target="_blank"
+              onClick={onOpenCart}
+              type="button"
             >
               <MessageCircle className="h-4 w-4" />
-              {brand.contact.whatsappLabel}
-            </a>
+              {cartLabel}
+            </button>
             <a
               className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--brand-line)] bg-[var(--brand-card)] px-4 py-3 text-sm font-semibold text-[var(--brand-text)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-primary)]"
               href={brand.contact.instagramUrl}

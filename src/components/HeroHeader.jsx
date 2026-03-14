@@ -21,8 +21,10 @@ function InfoItem({ children, icon }) {
   )
 }
 
-export function HeroHeader({ brand, whatsAppUrl }) {
+export function HeroHeader({ brand, cartItemCount, onOpenCart }) {
   const initials = getInitials(brand.name)
+  const cartLabel =
+    cartItemCount > 0 ? `Ver pedido (${cartItemCount})` : 'Pedir por WhatsApp'
 
   return (
     <header className="relative px-4 pt-3 sm:px-6 sm:pt-4 lg:px-8">
@@ -51,15 +53,14 @@ export function HeroHeader({ brand, whatsAppUrl }) {
               </div>
             </div>
 
-            <a
+            <button
               className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--brand-primary-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-primary)] sm:w-auto"
-              href={whatsAppUrl}
-              rel="noreferrer"
-              target="_blank"
+              onClick={onOpenCart}
+              type="button"
             >
               <MessageCircle className="h-4 w-4" />
-              Pedir por WhatsApp
-            </a>
+              {cartLabel}
+            </button>
           </div>
 
           <div className="border-t border-[var(--brand-line)] px-4 py-3 sm:px-5">

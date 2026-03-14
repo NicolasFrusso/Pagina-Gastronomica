@@ -3,7 +3,7 @@ import { categoryIconMap, fallbackCategoryIcon } from '../lib/iconMap'
 import { ProductCard } from './ProductCard'
 
 export const CategorySection = forwardRef(function CategorySection(
-  { category, formatMoney },
+  { cartQuantityByProductId, category, formatMoney, onAddToCart },
   ref,
 ) {
   const Icon = categoryIconMap[category.icon] ?? fallbackCategoryIcon
@@ -38,8 +38,10 @@ export const CategorySection = forwardRef(function CategorySection(
       <div className="grid gap-4 lg:grid-cols-2">
         {category.products.map((product) => (
           <ProductCard
+            cartQuantity={cartQuantityByProductId[product.id] ?? 0}
             formatMoney={formatMoney}
             key={product.id}
+            onAddToCart={onAddToCart}
             product={product}
           />
         ))}

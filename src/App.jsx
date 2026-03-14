@@ -1,6 +1,8 @@
 import { useDeferredValue, useEffect, useRef, useState } from 'react'
+import { CartDrawer } from './components/CartDrawer'
 import { CategorySection } from './components/CategorySection'
 import { CategoryTabs } from './components/CategoryTabs'
+import { FloatingCartButton } from './components/FloatingCartButton'
 import { Footer } from './components/Footer'
 import { HeroHeader } from './components/HeroHeader'
 import { MenuContainer } from './components/MenuContainer'
@@ -8,10 +10,17 @@ import { SearchBar } from './components/SearchBar'
 import { brandConfig } from './data/brandConfig'
 import { restaurantData } from './data/restaurantData'
 import {
-  createWhatsAppLink,
+  addCartItem,
+  buildCartWhatsAppLink,
+  decrementCartItem,
   formatPrice,
   getBrandStyles,
+  getCartItemCount,
+  getCartLineItems,
+  getCartTotal,
+  incrementCartItem,
   matchesSearchTerm,
+  removeCartItem,
 } from './lib/restaurantHelpers'
 
 function App() {
@@ -19,6 +28,8 @@ function App() {
   const [activeCategory, setActiveCategory] = useState(
     restaurantData.categories[0]?.id ?? 'all',
   )
+  const [cartItems, setCartItems] = useState([])
+  const [isCartOpen, setIsCartOpen] = useState(false)
   const deferredSearchTerm = useDeferredValue(searchTerm.trim())
   const menuTopRef = useRef(null)
   const sectionRefs = useRef({})
@@ -44,9 +55,24 @@ function App() {
     (accumulator, category) => accumulator + category.products.length,
     0,
   )
-  const whatsAppUrl = createWhatsAppLink(brandConfig.contact)
   const brandStyles = getBrandStyles(brandConfig.colors)
   const totalProducts = restaurantData.products.length
+  const cartLineItems = getCartLineItems(cartItems, restaurantData.products)
+  const cartItemCount = getCartItemCount(cartItems)
+  const cartTotal = getCartTotal(cartItems, restaurantData.products)
+  const cartQuantityByProductId = cartItems.reduce((accumulator, item) => {
+    accumulator[item.productId] = item.quantity
+
+    return accumulator
+  }, {})
+  const checkoutUrl = buildCartWhatsAppLink({
+    cartItems,
+    contact: brandConfig.contact,
+    money: brandConfig.money,
+    products: restaurantData.products,
+    restaurantName: brandConfig.name,
+  })
+  const formatMoney = (value) => formatPrice(value, brandConfig.money)
 
   useEffect(() => {
     if (!visibleCategoryKey) {
@@ -81,6 +107,27 @@ function App() {
     return () => observer.disconnect()
   }, [sections, visibleCategoryKey])
 
+  useEffect(() => {
+    if (!isCartOpen) {
+      return undefined
+    }
+
+    const previousOverflow = document.body.style.overflow
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsCartOpen(false)
+      }
+    }
+
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isCartOpen])
+
   const handleCategorySelect = (categoryId) => {
     if (categoryId === 'all') {
       setActiveCategory('all')
@@ -95,25 +142,55 @@ function App() {
     })
   }
 
+  const handleOpenCart = () => {
+    setIsCartOpen(true)
+  }
+
+  const handleCloseCart = () => {
+    setIsCartOpen(false)
+  }
+
+  const handleAddToCart = (productId) => {
+    setCartItems((currentCartItems) => addCartItem(currentCartItems, productId))
+  }
+
+  const handleIncrementCartItem = (productId) => {
+    setCartItems((currentCartItems) =>
+      incrementCartItem(currentCartItems, productId),
+    )
+  }
+
+  const handleDecrementCartItem = (productId) => {
+    setCartItems((currentCartItems) =>
+      decrementCartItem(currentCartItems, productId),
+    )
+  }
+
+  const handleRemoveCartItem = (productId) => {
+    setCartItems((currentCartItems) =>
+      removeCartItem(currentCartItems, productId),
+    )
+  }
+
   return (
     <div
-      className="min-h-screen bg-[var(--brand-background)] text-[var(--brand-text)]"
+      className="min-h-screen bg-[var(--brand-background)] pb-28 text-[var(--brand-text)] sm:pb-8"
       style={brandStyles}
     >
       <HeroHeader
         brand={brandConfig}
-        totalCategories={restaurantData.categories.length}
-        totalProducts={totalProducts}
-        whatsAppUrl={whatsAppUrl}
+        cartItemCount={cartItemCount}
+        onOpenCart={handleOpenCart}
       />
 
       <MenuContainer
+        cartItemCount={cartItemCount}
         mapUrl={brandConfig.contact.mapUrl}
+        onOpenCart={handleOpenCart}
         query={searchTerm}
         ref={menuTopRef}
         resultsCount={resultsCount}
         totalProducts={totalProducts}
-        whatsAppUrl={whatsAppUrl}
       >
         <div className="sticky top-3 z-30 -mx-1 mb-8 rounded-[28px] bg-white/92 px-1 pb-1 pt-1 shadow-card backdrop-blur">
           <SearchBar
@@ -132,9 +209,11 @@ function App() {
           <div className="space-y-10">
             {sections.map((section) => (
               <CategorySection
+                cartQuantityByProductId={cartQuantityByProductId}
                 category={section}
-                formatMoney={(value) => formatPrice(value, brandConfig.money)}
+                formatMoney={formatMoney}
                 key={section.id}
+                onAddToCart={handleAddToCart}
                 ref={(node) => {
                   sectionRefs.current[section.id] = node
                 }}
@@ -150,7 +229,7 @@ function App() {
               No encontramos productos para &quot;{searchTerm}&quot;
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[var(--brand-muted)] sm:text-base">
-              Probá con otro termino o limpiá la búsqueda para volver a ver toda
+              Proba con otro termino o limpia la busqueda para volver a ver toda
               la carta.
             </p>
             <button
@@ -164,7 +243,31 @@ function App() {
         )}
       </MenuContainer>
 
-      <Footer brand={brandConfig} whatsAppUrl={whatsAppUrl} />
+      <Footer
+        brand={brandConfig}
+        cartItemCount={cartItemCount}
+        onOpenCart={handleOpenCart}
+      />
+
+      <FloatingCartButton
+        formatMoney={formatMoney}
+        itemCount={cartItemCount}
+        onClick={handleOpenCart}
+        totalAmount={cartTotal}
+      />
+
+      <CartDrawer
+        checkoutUrl={checkoutUrl}
+        formatMoney={formatMoney}
+        isOpen={isCartOpen}
+        itemCount={cartItemCount}
+        items={cartLineItems}
+        onClose={handleCloseCart}
+        onDecrement={handleDecrementCartItem}
+        onIncrement={handleIncrementCartItem}
+        onRemove={handleRemoveCartItem}
+        totalAmount={cartTotal}
+      />
     </div>
   )
 }
