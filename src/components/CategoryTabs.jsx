@@ -26,7 +26,30 @@ function CategoryButton({ active, category, onSelect }) {
   )
 }
 
-export function CategoryTabs({ activeCategory, categories, onSelect }) {
+export function CategoryTabs({ activeCategory, categories, isMobile, onSelect }) {
+  if (isMobile) {
+    return (
+      <div className="mt-3 overflow-x-auto border-b border-[var(--brand-line)] pb-0 no-scrollbar">
+        <div className="flex min-w-max items-center gap-6">
+          {categories.map((category) => (
+            <button
+              className={`shrink-0 border-b-2 pb-3 pt-2 text-[0.97rem] font-semibold transition ${
+                activeCategory === category.id
+                  ? 'border-[var(--brand-text)] text-[var(--brand-text)]'
+                  : 'border-transparent text-[var(--brand-muted)]'
+              }`}
+              key={category.id}
+              onClick={() => onSelect(category.id)}
+              type="button"
+            >
+              {category.name}
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="mt-3 overflow-x-auto pb-2 no-scrollbar">
       <div className="flex min-w-max gap-3 px-1">

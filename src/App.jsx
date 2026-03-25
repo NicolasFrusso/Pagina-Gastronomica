@@ -3,7 +3,6 @@ import { CartDrawer } from './components/CartDrawer'
 import { CategorySection } from './components/CategorySection'
 import { CategoryTabs } from './components/CategoryTabs'
 import { FloatingCartButton } from './components/FloatingCartButton'
-import { Footer } from './components/Footer'
 import { HeroHeader } from './components/HeroHeader'
 import { MenuContainer } from './components/MenuContainer'
 import { SearchBar } from './components/SearchBar'
@@ -24,6 +23,13 @@ import {
 } from './lib/restaurantHelpers'
 
 function App() {
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false
+    }
+
+    return window.matchMedia('(max-width: 639px)').matches
+  })
   const [searchTerm, setSearchTerm] = useState('')
   const [activeCategory, setActiveCategory] = useState(
     restaurantData.categories[0]?.id ?? 'all',
@@ -34,7 +40,7 @@ function App() {
   const menuTopRef = useRef(null)
   const sectionRefs = useRef({})
 
-  const sections = restaurantData.categories
+  const desktopSections = restaurantData.categories
     .map((category) => ({
       ...category,
       products: restaurantData.products.filter(
@@ -45,10 +51,38 @@ function App() {
     }))
     .filter((category) => category.products.length > 0)
 
+  const mobileActiveCategoryId =
+    activeCategory === 'all'
+      ? restaurantData.categories[0]?.id ?? 'all'
+      : activeCategory
+  const mobileActiveCategory = restaurantData.categories.find(
+    (category) => category.id === mobileActiveCategoryId,
+  )
+  const mobileCategoryProducts = mobileActiveCategory
+    ? restaurantData.products.filter(
+        (product) =>
+          product.categoryId === mobileActiveCategory.id &&
+          matchesSearchTerm(product, deferredSearchTerm),
+      )
+    : []
+  const mobileSections = mobileActiveCategory
+    ? mobileCategoryProducts.length > 0
+      ? [
+        {
+          ...mobileActiveCategory,
+          products: mobileCategoryProducts,
+        },
+      ]
+      : []
+    : []
+  const sections = isMobile ? mobileSections : desktopSections
+
   const visibleCategoryIds = sections.map((category) => category.id)
   const visibleCategoryKey = visibleCategoryIds.join('|')
   const resolvedActiveCategory =
-    activeCategory === 'all' || visibleCategoryIds.includes(activeCategory)
+    isMobile
+      ? mobileActiveCategoryId
+      : activeCategory === 'all' || visibleCategoryIds.includes(activeCategory)
       ? activeCategory
       : visibleCategoryIds[0] ?? 'all'
   const resultsCount = sections.reduce(
@@ -75,7 +109,25 @@ function App() {
   const formatMoney = (value) => formatPrice(value, brandConfig.money)
 
   useEffect(() => {
-    if (!visibleCategoryKey) {
+    const mediaQuery = window.matchMedia('(max-width: 639px)')
+
+    const handleChange = (event) => {
+      setIsMobile(event.matches)
+    }
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange)
+
+      return () => mediaQuery.removeEventListener('change', handleChange)
+    }
+
+    mediaQuery.addListener(handleChange)
+
+    return () => mediaQuery.removeListener(handleChange)
+  }, [])
+
+  useEffect(() => {
+    if (isMobile || !visibleCategoryKey) {
       return undefined
     }
 
@@ -105,7 +157,7 @@ function App() {
     })
 
     return () => observer.disconnect()
-  }, [sections, visibleCategoryKey])
+  }, [isMobile, sections, visibleCategoryKey])
 
   useEffect(() => {
     if (!isCartOpen) {
@@ -129,6 +181,11 @@ function App() {
   }, [isCartOpen])
 
   const handleCategorySelect = (categoryId) => {
+    if (isMobile) {
+      setActiveCategory(categoryId)
+      return
+    }
+
     if (categoryId === 'all') {
       setActiveCategory('all')
       menuTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -174,7 +231,7 @@ function App() {
 
   return (
     <div
-      className="min-h-screen bg-[var(--brand-background)] pb-28 text-[var(--brand-text)] sm:pb-8"
+      className="min-h-screen bg-[var(--brand-background)] pb-24 text-[var(--brand-text)] sm:pb-4"
       style={brandStyles}
     >
       <HeroHeader
@@ -185,6 +242,7 @@ function App() {
 
       <MenuContainer
         cartItemCount={cartItemCount}
+        isMobile={isMobile}
         mapUrl={brandConfig.contact.mapUrl}
         onOpenCart={handleOpenCart}
         query={searchTerm}
@@ -192,8 +250,15 @@ function App() {
         resultsCount={resultsCount}
         totalProducts={totalProducts}
       >
-        <div className="sticky top-3 z-30 -mx-1 mb-8 rounded-[28px] bg-white/92 px-1 pb-1 pt-1 shadow-card backdrop-blur">
+        <div
+          className={`sticky z-30 ${
+            isMobile
+              ? 'top-0 z-40 -mx-1 mb-4 border-b border-[var(--brand-line)] bg-[var(--brand-surface)] px-1 pb-3 pt-2 shadow-[0_10px_18px_rgba(32,25,20,0.08)]'
+              : 'top-3 -mx-1 mb-8 rounded-[28px] bg-white/92 px-1 pb-1 pt-1 shadow-card backdrop-blur'
+          }`}
+        >
           <SearchBar
+            isMobile={isMobile}
             onChange={setSearchTerm}
             onClear={() => setSearchTerm('')}
             value={searchTerm}
@@ -201,17 +266,19 @@ function App() {
           <CategoryTabs
             activeCategory={resolvedActiveCategory}
             categories={restaurantData.categories}
+            isMobile={isMobile}
             onSelect={handleCategorySelect}
           />
         </div>
 
         {sections.length > 0 ? (
-          <div className="space-y-10">
+          <div className={isMobile ? 'space-y-4 pt-1' : 'space-y-10'}>
             {sections.map((section) => (
               <CategorySection
                 cartQuantityByProductId={cartQuantityByProductId}
                 category={section}
                 formatMoney={formatMoney}
+                isMobile={isMobile}
                 key={section.id}
                 onAddToCart={handleAddToCart}
                 ref={(node) => {
@@ -242,12 +309,6 @@ function App() {
           </section>
         )}
       </MenuContainer>
-
-      <Footer
-        brand={brandConfig}
-        cartItemCount={cartItemCount}
-        onOpenCart={handleOpenCart}
-      />
 
       <FloatingCartButton
         formatMoney={formatMoney}
