@@ -1,13 +1,11 @@
-import { ArrowUpRight, MapPin, MessageCircle } from 'lucide-react'
+import { ArrowUpRight, MapPin } from 'lucide-react'
 import { forwardRef } from 'react'
 
 export const MenuContainer = forwardRef(function MenuContainer(
   {
-    cartItemCount,
     children,
     isMobile,
     mapUrl,
-    onOpenCart,
     query,
     resultsCount,
     totalProducts,
@@ -17,8 +15,6 @@ export const MenuContainer = forwardRef(function MenuContainer(
   const summary = query
     ? `${resultsCount} resultado${resultsCount === 1 ? '' : 's'} para "${query}".`
     : `${totalProducts} opciones listas para explorar y personalizar con fotos propias.`
-  const cartLabel =
-    cartItemCount > 0 ? `Ver pedido (${cartItemCount})` : 'Pedir por WhatsApp'
 
   return (
     <main
@@ -52,14 +48,6 @@ export const MenuContainer = forwardRef(function MenuContainer(
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row">
-                <button
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[var(--brand-primary-strong)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-primary)]"
-                  onClick={onOpenCart}
-                  type="button"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  {cartLabel}
-                </button>
                 <a
                   className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--brand-line)] bg-[var(--brand-card)] px-5 py-3 text-sm font-semibold text-[var(--brand-text)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-primary)]"
                   href={mapUrl}

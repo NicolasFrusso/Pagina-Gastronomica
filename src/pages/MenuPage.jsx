@@ -33,7 +33,7 @@ export function MenuPage() {
   })
   const [searchTerm, setSearchTerm] = useState('')
   const [activeCategory, setActiveCategory] = useState(
-    fallbackAppData.restaurantData.categories[0]?.id ?? 'all',
+    fallbackAppData.restaurantData.categories[0]?.id ?? '',
   )
   const [cartItems, setCartItems] = useState([])
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -61,7 +61,7 @@ export function MenuPage() {
           return currentCategory
         }
 
-        return nextCategoryIds[0] ?? 'all'
+        return nextCategoryIds[0] ?? ''
       })
     })
 
@@ -99,10 +99,12 @@ export function MenuPage() {
     }))
     .filter((category) => category.products.length > 0)
 
-  const mobileActiveCategoryId =
-    activeCategory === 'all'
-      ? restaurantData.categories[0]?.id ?? 'all'
-      : activeCategory
+  const firstCategoryId = restaurantData.categories[0]?.id ?? ''
+  const mobileActiveCategoryId = restaurantData.categories.some(
+    (category) => category.id === activeCategory,
+  )
+    ? activeCategory
+    : firstCategoryId
   const mobileActiveCategory = restaurantData.categories.find(
     (category) => category.id === mobileActiveCategoryId,
   )
@@ -130,9 +132,9 @@ export function MenuPage() {
   const resolvedActiveCategory =
     isMobile
       ? mobileActiveCategoryId
-      : activeCategory === 'all' || visibleCategoryIds.includes(activeCategory)
+      : visibleCategoryIds.includes(activeCategory)
         ? activeCategory
-        : visibleCategoryIds[0] ?? 'all'
+        : visibleCategoryIds[0] ?? firstCategoryId
   const resultsCount = sections.reduce(
     (accumulator, category) => accumulator + category.products.length,
     0,
@@ -211,18 +213,12 @@ export function MenuPage() {
   }, [isCartOpen])
 
   const handleCategorySelect = (categoryId) => {
-    if (isMobile) {
-      setActiveCategory(categoryId)
-      return
-    }
-
-    if (categoryId === 'all') {
-      setActiveCategory('all')
-      menuTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      return
-    }
-
     setActiveCategory(categoryId)
+
+    if (isMobile) {
+      return
+    }
+
     sectionRefs.current[categoryId]?.scrollIntoView({
       behavior: 'smooth',
       block: 'start',
@@ -271,10 +267,8 @@ export function MenuPage() {
       />
 
       <MenuContainer
-        cartItemCount={cartItemCount}
         isMobile={isMobile}
         mapUrl={brand.contact.mapUrl}
-        onOpenCart={handleOpenCart}
         query={searchTerm}
         ref={menuTopRef}
         resultsCount={resultsCount}
