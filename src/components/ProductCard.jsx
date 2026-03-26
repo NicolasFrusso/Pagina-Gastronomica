@@ -7,15 +7,18 @@ export function ProductCard({
   onAddToCart,
   product,
 }) {
-  const quantityLabel =
-    cartQuantity > 0 ? `En carrito: ${cartQuantity}` : 'Tocar para agregar'
+  const quantityLabel = cartQuantity > 0 ? `En carrito: ${cartQuantity}` : ''
+  const ariaLabel =
+    cartQuantity > 0
+      ? `Agregar ${product.name} al carrito. En carrito: ${cartQuantity}.`
+      : `Agregar ${product.name} al carrito.`
   const cardClassName = isMobile
     ? 'group flex min-h-[132px] w-full items-stretch gap-3 rounded-[14px] border border-[var(--brand-line)] bg-white p-4 text-left shadow-[0_6px_16px_var(--brand-shadow-soft)] transition hover:border-[var(--brand-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-primary)]'
     : 'group flex min-h-[176px] w-full items-stretch gap-4 rounded-[28px] border border-[var(--brand-line)] bg-[var(--brand-card)] p-4 text-left shadow-card transition hover:-translate-y-0.5 hover:border-[var(--brand-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-primary)] sm:p-5'
 
   return (
     <button
-      aria-label={`Agregar ${product.name} al carrito. ${quantityLabel}.`}
+      aria-label={ariaLabel}
       className={cardClassName}
       onClick={() => onAddToCart(product.id)}
       type="button"
@@ -67,15 +70,11 @@ export function ProductCard({
             ) : null
           ) : (
             <div className="text-right">
-              <span
-                className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.16em] ${
-                  cartQuantity > 0
-                    ? 'bg-[var(--brand-primary-soft)] text-[var(--brand-primary)]'
-                    : 'bg-white text-[var(--brand-muted)]'
-                }`}
-              >
-                {quantityLabel}
-              </span>
+              {cartQuantity > 0 ? (
+                <span className="inline-flex rounded-full bg-[var(--brand-primary-soft)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--brand-primary)]">
+                  {quantityLabel}
+                </span>
+              ) : null}
             </div>
           )}
         </div>
